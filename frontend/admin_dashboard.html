@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Hotel Cancellation Prediction</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="js/common.js"></script>
+    <script>Auth.require("admin");</script>
+
+    <style>
+        body {
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+        .navbar {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-card,
+        .chart-card,
+        .history-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+        }
+
+        .stat-title {
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 30px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .chart-container {
+            height: 280px;
+        }
+
+        .table th,
+        .table td {
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .table td.nowrap {
+            white-space: nowrap;
+        }
+
+        .table td.details {
+            min-width: 280px;
+        }
+
+        .table td.customer {
+            min-width: 180px;
+        }
+
+        .badge-cancelled { background: #dc3545; color: #fff; }
+        .badge-not-cancelled { background: #198754; color: #fff; }
+        .badge-high { background: #dc3545; color: #fff; }
+        .badge-medium { background: #ffc107; color: #212529; }
+        .badge-low { background: #198754; color: #fff; }
+    </style>
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="admin_dashboard.html">
+            🏨 Hotel Cancellation Prediction
+            <span class="badge text-bg-secondary ms-2 fw-normal">Admin</span>
+        </a>
+        <div class="d-flex align-items-center gap-3" id="userNav"></div>
+    </div>
+</nav>
+
+
+<!-- ================= MAIN ================= -->
+
+<div class="container my-5">
+
+    <div class="mb-4">
+        <h1 class="fw-bold fs-2">Admin Dashboard</h1>
+        <p class="text-muted mb-0">
+            Prediction history and booking details for all customers.
+        </p>
+    </div>
+
+    <div id="pageError" class="alert alert-danger d-none" role="alert"></div>
+
+
+    <!-- ================= STATISTICS ================= -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-6 col-md-3">
+            <div class="card stat-card"><div class="card-body">
+                <div class="stat-title">Registered Customers</div>
+                <div id="totalCustomers" class="stat-value">0</div>
+            </div></div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card stat-card"><div class="card-body">
+                <div class="stat-title">Total Predictions</div>
+                <div id="totalPredictions" class="stat-value">0</div>
+            </div></div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card stat-card"><div class="card-body">
+                <div class="stat-title">Predicted Cancelled</div>
+                <div id="cancelledBookings" class="stat-value">0</div>
+            </div></div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card stat-card"><div class="card-body">
+                <div class="stat-title">Cancellation Rate</div>
+                <div id="cancellationRate" class="stat-value">0%</div>
+            </div></div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card stat-card"><div class="card-body">
+                <div class="stat-title">Predicted Not Cancelled</div>
+                <div id="notCancelledBookings" class="stat-value">0</div>
+            </div></div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card stat-card"><div class="card-body">
+                <div class="stat-title">High Risk</div>
+                <div id="highRisk" class="stat-value">0</div>
+            </div></div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card stat-card"><div class="card-body">
+                <div class="stat-title">Medium Risk</div>
+                <div id="mediumRisk" class="stat-value">0</div>
+            </div></div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card stat-card"><div class="card-body">
+                <div class="stat-title">Low Risk</div>
+                <div id="lowRisk" class="stat-value">0</div>
+            </div></div>
+        </div>
+
+    </div>
+
+
+    <!-- ================= CHARTS ================= -->
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-lg-6">
+            <div class="card chart-card"><div class="card-body">
+                <h5 class="fw-bold mb-3">Cancellation Distribution</h5>
+                <div class="chart-container">
+                    <canvas id="cancellationChart"></canvas>
+                </div>
+            </div></div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card chart-card"><div class="card-body">
+                <h5 class="fw-bold mb-3">Risk Level Distribution</h5>
+                <div class="chart-container">
+                    <canvas id="riskChart"></canvas>
+                </div>
+            </div></div>
+        </div>
+
+    </div>
+
+
+    <!-- ================= ALL CUSTOMERS' HISTORY ================= -->
+
+    <div class="card history-card mb-5">
+        <div class="card-body p-4">
+
+            <div class="mb-3">
+                <h5 class="fw-bold mb-1">📋 Customer Prediction History</h5>
+                <small class="text-muted" id="resultCount">Loading...</small>
+            </div>
+
+            <!-- FILTERS -->
+
+            <div class="row g-2 mb-3">
+
+                <div class="col-md-6">
+                    <label for="searchBox" class="visually-hidden">Search</label>
+                    <input type="search" id="searchBox" class="form-control"
+                           placeholder="Search by customer name, email or hotel">
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <label for="riskFilter" class="visually-hidden">Risk level</label>
+                    <select id="riskFilter" class="form-select">
+                        <option value="">All risk levels</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <label for="predFilter" class="visually-hidden">Prediction</label>
+                    <select id="predFilter" class="form-select">
+                        <option value="">All predictions</option>
+                        <option value="1">Cancelled</option>
+                        <option value="0">Not Cancelled</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- TABLE -->
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Customer</th>
+                            <th>Hotel</th>
+                            <th>Booking Details</th>
+                            <th>Prediction</th>
+                            <th>Probability</th>
+                            <th>Risk Level</th>
+                            <th>Date &amp; Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+    renderUserNav("userNav");
+</script>
+<script src="js/admin_dashboard.js"></script>
+</body>
+
+</html>

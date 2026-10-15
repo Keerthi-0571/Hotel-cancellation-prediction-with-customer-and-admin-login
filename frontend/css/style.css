@@ -1,0 +1,63 @@
+body {
+    background-color: #f5f7fa;
+    font-family: Arial, sans-serif;
+}
+
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+
+.card {
+    border: none;
+    border-radius: 12px;
+}
+
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+
+
+.form-label {
+    font-weight: 600;
+}
+
+
+.result-card {
+    min-height: 350px;
+}
+
+
+#result {
+    margin-top: 30px;
+}
+
+
+.prediction-success {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+
+.probability {
+    font-size: 36px;
+    font-weight: bold;
+}
+
+
+.risk-level {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+
+@media (max-width: 768px) {
+
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+}

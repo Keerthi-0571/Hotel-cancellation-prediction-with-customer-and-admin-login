@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>My History - Hotel Cancellation Prediction</title>
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+
+        body {
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+        .navbar {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .dashboard-title {
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #6b7280;
+        }
+
+        .stat-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            transition: 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-title {
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 30px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .chart-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        }
+
+        .chart-container {
+            height: 300px;
+        }
+
+        .back-btn {
+            border-radius: 10px;
+        }
+
+        .history-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        }
+
+        .history-title {
+            font-weight: 700;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .table td {
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .badge-cancelled {
+            background: #dc3545;
+            color: white;
+        }
+
+        .badge-not-cancelled {
+            background: #198754;
+            color: white;
+        }
+
+        .badge-high {
+            background: #dc3545;
+            color: white;
+        }
+
+        .badge-medium {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .badge-low {
+            background: #198754;
+            color: white;
+        }
+
+        .table td.details {
+            white-space: normal;
+            min-width: 260px;
+        }
+        .empty-history {
+            display: none;
+        }
+
+    </style>
+
+    <script src="js/common.js"></script>
+    <script>Auth.require("customer");</script>
+
+</head>
+
+
+<body>
+
+
+<!-- ================= NAVBAR ================= -->
+
+<nav class="navbar navbar-dark bg-dark">
+
+    <div class="container">
+
+        <a class="navbar-brand fw-bold"
+           href="index.html">
+
+            🏨 Hotel Cancellation Prediction
+
+        </a>
+
+        <div class="d-flex align-items-center gap-3" id="userNav"></div>
+
+    </div>
+
+</nav>
+
+
+<!-- ================= MAIN ================= -->
+
+<div class="container my-5">
+
+
+    <!-- ================= TITLE ================= -->
+
+    <div class="text-center mb-5">
+
+        <h1 class="dashboard-title">
+
+            📊 My Prediction History
+
+        </h1>
+
+        <p class="subtitle">
+
+            Your own hotel booking cancellation predictions
+
+        </p>
+
+    </div>
+
+
+    <!-- ================= STATISTICS ================= -->
+
+    <div class="row g-4 mb-5">
+
+
+        <!-- Total Predictions -->
+
+        <div class="col-md-4 col-lg-2">
+
+            <div class="card stat-card">
+
+                <div class="card-body">
+
+                    <div class="stat-title">
+
+                        Total Predictions
+
+                    </div>
+
+                    <div
+                        id="totalPredictions"
+                        class="stat-value">
+
+                        0
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Cancelled -->
+
+        <div class="col-md-4 col-lg-2">
+
+            <div class="card stat-card">
+
+                <div class="card-body">
+
+                    <div class="stat-title">
+
+                        Cancelled
+
+                    </div>
+
+                    <div
+                        id="cancelledBookings"
+                        class="stat-value">
+
+                        0
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Not Cancelled -->
+
+        <div class="col-md-4 col-lg-2">
+
+            <div class="card stat-card">
+
+                <div class="card-body">
+
+                    <div class="stat-title">
+
+                        Not Cancelled
+
+                    </div>
+
+                    <div
+                        id="notCancelledBookings"
+                        class="stat-value">
+
+                        0
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Cancellation Rate -->
+
+        <div class="col-md-4 col-lg-2">
+
+            <div class="card stat-card">
+
+                <div class="card-body">
+
+                    <div class="stat-title">
+
+                        Cancellation Rate
+
+                    </div>
+
+                    <div
+                        id="cancellationRate"
+                        class="stat-value">
+
+                        0%
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- High Risk -->
+
+        <div class="col-md-4 col-lg-2">
+
+            <div class="card stat-card">
+
+                <div class="card-body">
+
+                    <div class="stat-title">
+
+                        High Risk
+
+                    </div>
+
+                    <div
+                        id="highRisk"
+                        class="stat-value">
+
+                        0
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Medium Risk -->
+
+        <div class="col-md-4 col-lg-2">
+
+            <div class="card stat-card">
+
+                <div class="card-body">
+
+                    <div class="stat-title">
+
+                        Medium Risk
+
+                    </div>
+
+                    <div
+                        id="mediumRisk"
+                        class="stat-value">
+
+                        0
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= LOW RISK ================= -->
+
+    <div class="row g-4 mb-5">
+
+        <div class="col-md-4">
+
+            <div class="card stat-card">
+
+                <div class="card-body">
+
+                    <div class="stat-title">
+
+                        Low Risk
+
+                    </div>
+
+                    <div
+                        id="lowRisk"
+                        class="stat-value">
+
+                        0
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= CHARTS ================= -->
+
+    <div class="row g-4 mb-5">
+
+
+        <!-- Cancellation Chart -->
+
+        <div class="col-lg-6">
+
+            <div class="card chart-card">
+
+                <div class="card-body">
+
+                    <h5 class="fw-bold mb-4">
+
+                        Cancellation Distribution
+
+                    </h5>
+
+                    <div class="chart-container">
+
+                        <canvas
+                            id="cancellationChart">
+                        </canvas>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Risk Chart -->
+
+        <div class="col-lg-6">
+
+            <div class="card chart-card">
+
+                <div class="card-body">
+
+                    <h5 class="fw-bold mb-4">
+
+                        Risk Level Distribution
+
+                    </h5>
+
+                    <div class="chart-container">
+
+                        <canvas
+                            id="riskChart">
+                        </canvas>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= PREDICTION HISTORY ================= -->
+
+    <div class="card history-card mb-5">
+
+        <div class="card-body p-4">
+
+            <div class="d-flex justify-content-between
+                        align-items-center mb-4">
+
+                <div>
+
+                    <h5 class="history-title mb-1">
+
+                        📋 Prediction History
+
+                    </h5>
+
+                    <small class="text-muted">
+
+                        Newest first
+
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <!-- TABLE -->
+
+            <div class="table-responsive">
+
+                <table class="table table-hover
+                              align-middle">
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th>#</th>
+
+                            <th>Hotel</th>
+                            <th>Booking Details</th>
+
+                            <th>Prediction</th>
+
+                            <th>Probability</th>
+
+                            <th>Risk Level</th>
+
+                            <th>Date & Time</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <!-- IMPORTANT:
+                         This ID must match dashboard.js -->
+
+                    <tbody id="predictionHistory">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- EMPTY MESSAGE -->
+
+            <div
+                id="noHistory"
+                class="empty-history text-center
+                       text-muted py-5">
+
+                <div style="font-size: 40px;">
+
+                    📭
+
+                </div>
+
+                <h6 class="mt-3">
+
+                    No predictions available yet
+
+                </h6>
+
+                <p class="small">
+
+                    Make a prediction from the
+                    <b>New Prediction</b> page.
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<!-- ================= JAVASCRIPT ================= -->
+
+
+
+<script>
+    renderUserNav(
+        "userNav",
+        '<a class="btn btn-outline-light btn-sm" href="index.html">← New Prediction</a>'
+    );
+</script>
+<script src="js/dashboard.js"></script>
+</body>
+
+</html>

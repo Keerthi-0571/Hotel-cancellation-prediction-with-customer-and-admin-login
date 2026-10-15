@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Hotel Cancellation Prediction</title>
+
+
+    <!-- =====================================================
+         BOOTSTRAP
+    ====================================================== -->
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+
+    <!-- =====================================================
+         CUSTOM CSS
+    ====================================================== -->
+
+    <style>
+
+        body {
+            background: #f5f7fb;
+            font-family: Arial, sans-serif;
+        }
+
+
+        /* NAVBAR */
+
+        .navbar {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+
+        /* MAIN CARD */
+
+        .main-card {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+
+        .card-header {
+            border-radius: 18px 18px 0 0 !important;
+        }
+
+
+        /* FORM */
+
+        .form-label {
+            font-weight: 600;
+        }
+
+
+        .form-control,
+        .form-select {
+            min-height: 46px;
+            border-radius: 9px;
+        }
+
+
+        .form-control:focus,
+        .form-select:focus {
+
+            border-color: #0d6efd;
+
+            box-shadow:
+                0 0 0 0.2rem
+                rgba(13,110,253,0.15);
+        }
+
+
+        /* HOTEL MESSAGE */
+
+        #hotelMessage {
+            min-height: 22px;
+        }
+
+
+        /* RESULT */
+
+        .result-card {
+
+            border: none;
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 5px 20px
+                rgba(0,0,0,0.08);
+
+            min-height: 500px;
+        }
+
+
+        /* PREDICTION */
+
+        .prediction-success {
+
+            font-size: 28px;
+
+            font-weight: 700;
+
+            margin: 15px 0;
+        }
+
+
+        .prediction-cancelled {
+            color: #dc3545;
+        }
+
+
+        .prediction-not-cancelled {
+            color: #198754;
+        }
+
+
+        /* PROBABILITY */
+
+        .probability {
+
+            font-size: 32px;
+
+            font-weight: 700;
+        }
+
+
+        /* RISK */
+
+        .risk-badge {
+
+            display: inline-block;
+
+            padding: 8px 18px;
+
+            border-radius: 20px;
+
+            font-weight: 700;
+        }
+
+
+        .risk-high {
+
+            color: #dc3545;
+
+            background: #fde2e5;
+        }
+
+
+        .risk-medium {
+
+            color: #b77900;
+
+            background: #fff3cd;
+        }
+
+
+        .risk-low {
+
+            color: #198754;
+
+            background: #d1e7dd;
+        }
+
+
+        /* PROGRESS */
+
+        .progress {
+
+            height: 14px;
+
+            border-radius: 10px;
+        }
+
+
+        .progress-bar {
+
+            transition:
+                width 0.5s ease;
+        }
+
+
+        /* BUTTON */
+
+        #predictBtn {
+
+            min-height: 52px;
+
+            border-radius: 10px;
+
+            font-size: 17px;
+
+            font-weight: 600;
+        }
+
+
+        /* ERROR */
+
+        .error-box {
+
+            border-radius: 12px;
+        }
+
+    </style>
+
+    <script src="js/common.js"></script>
+    <script>Auth.require("customer");</script>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     NAVBAR
+====================================================== -->
+
+<nav class="navbar navbar-dark bg-dark">
+
+    <div class="container">
+
+        <a
+            class="navbar-brand fw-bold"
+            href="index.html">
+
+            🏨 Hotel Cancellation Prediction
+
+        </a>
+
+
+        <div class="d-flex align-items-center gap-3" id="userNav"></div>
+
+    </div>
+
+</nav>
+
+
+
+<!-- =====================================================
+     MAIN
+====================================================== -->
+
+<div class="container my-5">
+
+
+    <!-- TITLE -->
+
+    <div class="text-center mb-4">
+
+        <h1 class="fw-bold">
+
+            Hotel Booking Cancellation Prediction
+
+        </h1>
+
+
+        <p class="text-muted">
+
+            Enter booking details to predict cancellation risk
+
+        </p>
+
+    </div>
+
+
+
+    <div class="row g-4">
+
+
+        <!-- =================================================
+             BOOKING FORM
+        ================================================== -->
+
+        <div class="col-lg-7">
+
+            <div class="card main-card">
+
+
+                <!-- HEADER -->
+
+                <div class="card-header bg-dark text-white p-4">
+
+                    <h4 class="mb-1">
+
+                        📝 Booking Details
+
+                    </h4>
+
+
+                    <small>
+
+                        Enter the booking information below
+
+                    </small>
+
+                </div>
+
+
+
+                <!-- BODY -->
+
+                <div class="card-body p-4">
+
+
+                    <!-- IMPORTANT:
+                         NO normal form submission -->
+
+                    <form
+                        id="predictionForm"
+                        autocomplete="off">
+
+
+                        <!-- =================================================
+                             ROW 1
+                        ================================================== -->
+
+                        <div class="row">
+
+
+                            <!-- HOTEL -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label
+                                    for="hotel"
+                                    class="form-label">
+
+                                    Hotel
+
+                                </label>
+
+
+                                <select
+                                    id="hotel"
+                                    name="hotel"
+                                    class="form-select">
+
+                                    <option
+                                        value=""
+                                        selected>
+
+                                        Select Hotel
+
+                                    </option>
+
+
+                                    <option
+                                        value="Resort Hotel">
+
+                                        Resort Hotel
+
+                                    </option>
+
+
+                                    <option
+                                        value="City Hotel">
+
+                                        City Hotel
+
+                                    </option>
+
+                                </select>
+
+
+                                <div
+                                    id="hotelMessage"
+                                    class="form-text text-muted">
+
+                                    Please select the hotel.
+
+                                </div>
+
+                            </div>
+
+
+
+                            <!-- LEAD TIME -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label
+                                    for="lead_time"
+                                    class="form-label">
+
+                                    Lead Time (days)
+
+                                </label>
+
+
+                                <input
+                                    type="number"
+                                    id="lead_time"
+                                    name="lead_time"
+                                    class="form-control"
+                                    value="30"
+                                    min="0"
+                                    max="1000">
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- =================================================
+                             ROW 2
+                        ================================================== -->
+
+                        <div class="row">
+
+
+                            <!-- ARRIVAL MONTH -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label
+                                    for="arrival_date_month"
+                                    class="form-label">
+
+                                    Arrival Month
+
+                                </label>
+
+
+                                <select
+                                    id="arrival_date_month"
+                                    name="arrival_date_month"
+                                    class="form-select">
+
+                                    <option value="January">
+                                        January
+                                    </option>
+
+                                    <option value="February">
+                                        February
+                                    </option>
+
+                                    <option value="March">
+                                        March
+                                    </option>
+
+                                    <option value="April">
+                                        April
+                                    </option>
+
+                                    <option value="May">
+                                        May
+                                    </option>
+
+                                    <option value="June">
+                                        June
+                                    </option>
+
+                                    <option value="July"
+                                            selected>
+                                        July
+                                    </option>
+
+                                    <option value="August">
+                                        August
+                                    </option>
+
+                                    <option value="September">
+                                        September
+                                    </option>
+
+                                    <option value="October">
+                                        October
+                                    </option>
+
+                                    <option value="November">
+                                        November
+                                    </option>
+
+                                    <option value="December">
+                                        December
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+
+                            <!-- TOTAL NIGHTS -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label
+                                    for="total_nights"
+                                    class="form-label">
+
+                                    Total Nights
+
+                                </label>
+
+
+                                <input
+                                    type="number"
+                                    id="total_nights"
+                                    name="total_nights"
+                                    class="form-control"
+                                    value="3"
+                                    min="1"
+                                    max="365">
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- =================================================
+                             ROW 3
+                        ================================================== -->
+
+                        <div class="row">
+
+
+                            <!-- ADULTS -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label
+                                    for="adults"
+                                    class="form-label">
+
+                                    Adults
+
+                                </label>
+
+
+                                <input
+                                    type="number"
+                                    id="adults"
+                                    name="adults"
+                                    class="form-control"
+                                    value="2"
+                                    min="1"
+                                    max="20">
+
+                            </div>
+
+
+
+                            <!-- CHILDREN -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label
+                                    for="children"
+                                    class="form-label">
+
+                                    Children
+
+                                </label>
+
+
+                                <input
+                                    type="number"
+                                    id="children"
+                                    name="children"
+                                    class="form-control"
+                                    value="0"
+                                    min="0"
+                                    max="20">
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- =================================================
+                             ROW 4
+                        ================================================== -->
+
+                        <div class="row">
+
+
+                            <!-- MARKET SEGMENT -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label
+                                    for="market_segment"
+                                    class="form-label">
+
+                                    Market Segment
+
+                                </label>
+
+
+                                <select
+                                    id="market_segment"
+                                    name="market_segment"
+                                    class="form-select">
+
+                                    <option value="">
+                                        Select Market Segment
+                                    </option>
+
+                                    <option value="Online TA">
+                                        Online TA
+                                    </option>
+
+                                    <option value="Offline TA/TO">
+                                        Offline TA/TO
+                                    </option>
+
+                                    <option value="Direct">
+                                        Direct
+                                    </option>
+
+                                    <option value="Groups">
+                                        Groups
+                                    </option>
+
+                                    <option value="Corporate">
+                                        Corporate
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+
+                            <!-- DEPOSIT -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label
+                                    for="deposit_type"
+                                    class="form-label">
+
+                                    Deposit Type
+
+                                </label>
+
+
+                                <select
+                                    id="deposit_type"
+                                    name="deposit_type"
+                                    class="form-select">
+
+                                    <option value="">
+                                        Select Deposit Type
+                                    </option>
+
+                                    <option value="No Deposit">
+                                        No Deposit
+                                    </option>
+
+                                    <option value="Non Refund">
+                                        Non Refund
+                                    </option>
+
+                                    <option value="Refundable">
+                                        Refundable
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- =================================================
+                             PREDICT BUTTON
+
+                             IMPORTANT:
+                             type="button"
+                             NOT type="submit"
+                        ================================================== -->
+
+                        <button
+                            type="submit"
+                            id="predictBtn"
+                            class="btn btn-primary btn-lg w-100 mt-3">
+
+                            🔍 Predict Cancellation
+
+                        </button>
+
+
+
+                        <!-- =================================================
+                             LOADING
+                        ================================================== -->
+
+                        <div
+                            id="loading"
+                            class="text-center mt-3 d-none">
+
+                            <div
+                                class="spinner-border text-primary"
+                                role="status">
+
+                            </div>
+
+
+                            <p class="text-muted mt-2 mb-0">
+
+                                Predicting...
+
+                            </p>
+
+                        </div>
+
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             RESULT
+        ================================================== -->
+
+        <div class="col-lg-5">
+
+            <div
+                class="card result-card"
+                id="resultCard">
+
+                <div class="card-body p-4">
+
+                    <div
+                        id="result"
+                        class="text-center">
+
+
+                        <h4 class="fw-bold">
+
+                            📊 Prediction Result
+
+                        </h4>
+
+
+                        <p class="text-muted mt-4">
+
+                            Fill in the booking details and click
+
+                            <strong>
+                                Predict Cancellation
+                            </strong>
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     JAVASCRIPT
+====================================================== -->
+
+<script>
+    renderUserNav(
+        "userNav",
+        '<a class="btn btn-outline-light btn-sm" href="dashboard.html">📋 My History</a>'
+    );
+</script>
+
+<script src="js/script.js?v=11"></script>
+
+</body>
+
+</html>

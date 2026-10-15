@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+.env
+.vscode/
+backend/hotel_app.db
+backend/.secret_key
